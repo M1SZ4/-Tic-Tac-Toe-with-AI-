@@ -1,3 +1,6 @@
+import random
+
+
 def print_field():
     """Print game board in table format"""
     print("---------")
@@ -8,52 +11,39 @@ def print_field():
 
 def game_status():
     """Check if game is finished"""
-    not_finished = False
-    # sprawdza po przekatnej
-    if field[0][0] == field[1][1] == field[2][2] or field[0][2] == field[1][1] == field[2][0]:
+    draw = True
+    # check diagonal
+    if field[0][0] == field[1][1] == field[2][2] != " " or field[0][2] == field[1][1] == field[2][0] != " ":
         print(field[1][1] + " wins")
         return True
 
     for element in field:
-        # sprawdza wiersze
+        # check rows
         if "O" not in element and " " not in element:
             print("X wins")
             return True
         elif "X" not in element and " " not in element:
             print("O wins")
             return True
-        # jezeli jest puste pole gra sie nie konczy
+        # if there is empty field game is continued
         elif " " in element:
-            not_finished = True
-    # jezeli nie ma pustego pola to remis
-    if not_finished:
-        print("Game not finished")
-        return False
-    else:
+            draw = False
+    # if all fields are filled and no one wins, game is finished with draw
+    if draw:
         print("Draw")
         return True
-
-
-def set_start_symbol():
-    """Set start symbol"""
-    if initial_sheet.count("X") > initial_sheet.count("O"):
-        return "O"
     else:
-        return "X"
+        return False
 
 
-initial_sheet = input("Enter cells: ")
-initial_sheet = initial_sheet.replace("_", " ")
-sheet_list = list(initial_sheet)
-
-# mozna to zrobic lepiej
+# create empty field
 field = []
-field.append(sheet_list[:3])
-field.append(sheet_list[3:6])
-field.append(sheet_list[6:])
+for i in range(3):
+    field.append([])
+    for j in range(3):
+        field[i].append(" ")
 
 print_field()
-symbol = set_start_symbol()
 
 while True:
     try:
@@ -67,12 +57,22 @@ while True:
             x = abs(y - 3)
             y = temp_x - 1
             if field[x][y] == " ":
-                field[x][y] = symbol
+                field[x][y] = "X"
                 print_field()
                 if game_status():
                     break
-                # limit dla 1 podpunktu zeby wykonac aby 1 ruch
-                break
+                # computer move
+                print('Making move level "easy"')
+                while True:
+                    x = random.randint(0, 2)
+                    y = random.randint(0, 2)
+                    if field[x][y] == " ":
+                        field[x][y] = "O"
+                        print_field()
+                        break
+
+                if game_status():
+                    break
             else:
                 print("This cell is occupied! Choose another one!")
         else:
