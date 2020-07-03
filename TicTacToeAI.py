@@ -5,11 +5,12 @@ class Game:
     # coordinates of last move
     x = 0
     y = 0
+    empty_fields = []
 
     def __init__(self, player1, player2):
         self.player1 = player1
         self.player2 = player2
-        # create empty field
+        # create empty game board
         self.board = []
         for i in range(3):
             self.board.append([])
@@ -24,16 +25,19 @@ class Game:
         print("---------")
 
     def play_game(self):
+        """Main game loop"""
         while True:
-            self.make_move(self.player1, "X")
-            if self.game_status("X"):
+            self.choose_field(self.player1, "X")
+            if self.check_empty_fields() or self.game_status("X"):
                 break
-            self.make_move(self.player2, "O")
-            if self.game_status("O"):
+
+            self.choose_field(self.player2, "O")
+            if self.check_empty_fields() or self.game_status("O"):
                 break
+
         return True
 
-    def make_move(self, player, mark):
+    def choose_field(self, player, mark):
         if player == "user":
             """"Player move"""
             while True:
@@ -47,27 +51,75 @@ class Game:
                         self.x = abs(self.y - 3)
                         self.y = temp_x - 1
                         if self.board[self.x][self.y] == " ":
-                            self.board[self.x][self.y] = mark
-                            self.print_board()
+                            self.move(mark)
                             break
                         else:
                             print("This cell is occupied! Choose another one!")
                     else:
                         print("Coordinates should be from 1 to 3!")
 
-        else:
+        elif player == "easy":
             """computer AI easy move"""
             print('Making move level "easy"')
-            while True:
-                self.x = random.randint(0, 2)
-                self.y = random.randint(0, 2)
-                if self.board[self.x][self.y] == " ":
-                    self.board[self.x][self.y] = mark
-                    self.print_board()
+            self.random_move(mark)
+
+        elif player == "medium":
+            """computer AI medium move"""
+            print('Making move level "medium"')
+            for coords in self.empty_fields:
+                self.x = coords[0]
+                self.y = coords[1]
+                horizontal = [self.board[coords[0]][0], self.board[coords[0]][1], self.board[coords[0]][2]]
+                vertical = [self.board[0][coords[1]], self.board[1][coords[1]], self.board[2][coords[1]]]
+
+                if horizontal.count("X") == 2 or horizontal.count("O") == 2:
+                    self.move(mark)
                     break
 
+                elif vertical.count("X") == 2 or vertical.count("O") == 2:
+                    self.move(mark)
+                    break
+                # if x == y check main diagonal
+                elif coords[0] == coords[1]:
+                    diagonal1 = [self.board[0][0], self.board[1][1], self.board[2][2]]
+                    if diagonal1.count("X") == 2 or diagonal1.count("O") == 2:
+                        self.move(mark)
+                        break
+                # if x + y = 2 check secondary diagonal
+                elif coords[0] + coords[1] == 2:
+                    diagonal2 = [self.board[2][0], self.board[1][1], self.board[0][2]]
+                    if diagonal2.count("X") == 2 or diagonal2.count("O") == 2:
+                        self.move(mark)
+                        break
+            else:
+                self.random_move(mark)
+
+    def random_move(self, mark):
+        while True:
+            self.x = random.randint(0, 2)
+            self.y = random.randint(0, 2)
+            if self.board[self.x][self.y] == " ":
+                self.move(mark)
+                break
+
+    def move(self, mark):
+        self.board[self.x][self.y] = mark
+        self.print_board()
+
+    def check_empty_fields(self):
+        self.empty_fields.clear()
+        for i in range(3):
+            for j in range(3):
+                if self.board[i][j] == " ":
+                    self.empty_fields.append([i, j])
+        # check for draw
+        if len(self.empty_fields) == 0:
+            print("Draw")
+            return True
+        else:
+            return False
+
     def game_status(self, mark):
-        draw = True
         # check if previous move caused a win on vertical line
         if self.board[0][self.y] == self.board[1][self.y] == self.board[2][self.y]:
             print(mark + " wins")
@@ -88,24 +140,16 @@ class Game:
             print(mark + " wins")
             return True
 
-        # check for " " in the board, if there is no " " = draw
-        for x in self.board:
-            if " " in x:
-                draw = False
-
-        if draw:
-            print("Draw")
-            return True
-        else:
-            return False
+        return False
 
 
 def main():
+    available_commands = ["user", "easy", "medium"]
     while True:
         menu = input("Input command: ").split()
         if menu[0] == "exit":
             exit()
-        elif menu[0] == "start" and (menu[1] == "easy" or menu[1] == "user") and (menu[2] == "easy" or menu[2] == "user"):
+        elif menu[0] == "start" and menu[1] in available_commands and menu[2] in available_commands:
             game = Game(menu[1], menu[2])
             game.play_game()
         else:
