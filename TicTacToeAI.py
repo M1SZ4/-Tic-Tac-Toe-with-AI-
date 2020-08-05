@@ -1,7 +1,5 @@
 from math import inf
 import random
-from os import system
-import platform
 
 
 def opposite(ch):
@@ -76,15 +74,16 @@ class Game:
         """Main game loop"""
         while True:
             self.choose_field(self.player1, "X")
-            if self.check_empty_fields(self.board):
+            if len(self.empty_fields(self.board)) == 0:
+                print("Draw")
                 break
             if game_status(self.board, "X"):
                 print("X wins")
                 break
 
             self.choose_field(self.player2, "O")
-
-            if self.check_empty_fields(self.board):
+            if len(self.empty_fields(self.board)) == 0:
+                print("Draw")
                 break
             if game_status(self.board, "O"):
                 print("O wins")
@@ -121,59 +120,59 @@ class Game:
         elif player == "medium":
             """computer AI medium move"""
             print('Making move level "medium"')
-            for coords in self.empty_fields:
+            for coords in self.empty_fields(self.board):
                 self.x = coords[0]
                 self.y = coords[1]
 
-                # SET ZROBI TO SZYBCIEJ
-                possible_wins = [
-                    [self.board[self.x][0], self.board[self.x][1], self.board[self.x][2]],  # horizontal
-                    [self.board[0][self.y], self.board[1][self.y], self.board[2][self.y]]  # vertical
-                ]
-                # diagonal1
-                if self.x == self.y:
-                    possible_wins.append([self.board[0][0], self.board[1][1], self.board[2][2]])
-                # diagonal2
-                if self.x + self.y == 2:
-                    possible_wins.append([self.board[2][0], self.board[1][1], self.board[0][2]])
+                # # SET ZROBI TO SZYBCIEJ
+                # possible_wins = [
+                #     [self.board[self.x][0], self.board[self.x][1], self.board[self.x][2]],  # horizontal
+                #     [self.board[0][self.y], self.board[1][self.y], self.board[2][self.y]]  # vertical
+                # ]
+                # # diagonal1
+                # if self.x == self.y:
+                #     possible_wins.append([self.board[0][0], self.board[1][1], self.board[2][2]])
+                # # diagonal2
+                # if self.x + self.y == 2:
+                #     possible_wins.append([self.board[2][0], self.board[1][1], self.board[0][2]])
+                #
+                # for line in possible_wins:
+                #     if line.count("X") == 2 or line.count("O") == 2:
+                #         self.move(mark)
+                #         break
 
-                for line in possible_wins:
-                    if line.count("X") == 2 or line.count("O") == 2:
+                horizontal = [self.board[coords[0]][0], self.board[coords[0]][1], self.board[coords[0]][2]]
+                vertical = [self.board[0][coords[1]], self.board[1][coords[1]], self.board[2][coords[1]]]
+
+                if horizontal.count("X") == 2 or horizontal.count("O") == 2:
+                    self.move(mark)
+                    break
+
+                elif vertical.count("X") == 2 or vertical.count("O") == 2:
+                    self.move(mark)
+                    break
+                # if x == y check main diagonal
+                elif coords[0] == coords[1]:
+                    diagonal1 = [self.board[0][0], self.board[1][1], self.board[2][2]]
+                    if diagonal1.count("X") == 2 or diagonal1.count("O") == 2:
                         self.move(mark)
                         break
-
-                # horizontal = [self.board[coords[0]][0], self.board[coords[0]][1], self.board[coords[0]][2]]
-                # vertical = [self.board[0][coords[1]], self.board[1][coords[1]], self.board[2][coords[1]]]
-                #
-                # if horizontal.count("X") == 2 or horizontal.count("O") == 2:
-                #     self.move(mark)
-                #     break
-                #
-                # elif vertical.count("X") == 2 or vertical.count("O") == 2:
-                #     self.move(mark)
-                #     break
-                # # if x == y check main diagonal
-                # elif coords[0] == coords[1]:
-                #     diagonal1 = [self.board[0][0], self.board[1][1], self.board[2][2]]
-                #     if diagonal1.count("X") == 2 or diagonal1.count("O") == 2:
-                #         self.move(mark)
-                #         break
-                # # if x + y = 2 check secondary diagonal
-                # elif coords[0] + coords[1] == 2:
-                #     diagonal2 = [self.board[2][0], self.board[1][1], self.board[0][2]]
-                #     if diagonal2.count("X") == 2 or diagonal2.count("O") == 2:
-                #         self.move(mark)
-                #         break
+                # if x + y = 2 check secondary diagonal
+                elif coords[0] + coords[1] == 2:
+                    diagonal2 = [self.board[2][0], self.board[1][1], self.board[0][2]]
+                    if diagonal2.count("X") == 2 or diagonal2.count("O") == 2:
+                        self.move(mark)
+                        break
             else:
                 self.random_move(mark)
-                
+
         elif player == "hard":
             print('Making move level "hard"')
             global ai, hu
             ai = mark
             hu = 'O' if mark == 'X' else 'X'
 
-            depth = len(self.empty_fields)
+            depth = len(self.empty_fields(self.board))
             # or self.game_over(self.board)
 
             if depth == 9:
@@ -182,7 +181,6 @@ class Game:
                 move = self.minimax(self.board, depth, mark)
                 self.x, self.y = move[0], move[1]
                 self.move(mark)
-
 
     # def mini_max(self, player):
     #     if game_status(hu):
@@ -204,16 +202,7 @@ class Game:
     #
     #     return min(moves) if player == hu else max(moves)
 
-
-
-
-
     def evaluate(self, state):
-        """
-        Function to heuristic evaluation of state.
-        :param state: the state of the current board
-        :return: +1 if the computer wins; -1 if the human wins; 0 draw
-        """
         if game_status(state, ai):
             score = +1
         elif game_status(state, hu):
@@ -224,14 +213,6 @@ class Game:
         return score
 
     def minimax(self, state, depth, mark):
-        """
-        AI function that choice the best move
-        :param mark:
-        :param state: current state of the board
-        :param depth: node index in the tree (0 <= depth <= 9),
-        but never nine in this case (see iaturn() function)
-        :return: a list with [the best row, best col, best score]
-        """
         if mark == ai:
             best = [-1, -1, -inf]
         else:
@@ -241,9 +222,7 @@ class Game:
             score = self.evaluate(state)
             return [-1, -1, score]
 
-        #self.check_empty_fields(state)
-        self.check_empty_fields(state)
-        for cell in self.empty_fields:
+        for cell in self.empty_fields(state):
             x, y = cell[0], cell[1]
             state[x][y] = mark
             score = self.minimax(state, depth - 1, opposite(mark))
@@ -256,10 +235,8 @@ class Game:
             else:
                 if score[2] < best[2]:
                     best = score  # min value
-            self.check_empty_fields(state)
 
         return best
-
 
     def random_move(self, mark):
         while True:
@@ -273,18 +250,27 @@ class Game:
         self.board[self.x][self.y] = mark
         self.print_board()
 
-    def check_empty_fields(self, state):
-        self.empty_fields.clear()
+    # def check_empty_fields(self, state):
+    #     self.empty_fields.clear()
+    #     for i in range(3):
+    #         for j in range(3):
+    #             if state[i][j] == " ":
+    #                 self.empty_fields.append([i, j])
+    #     # check for draw
+    #     if len(self.empty_fields) == 0:
+    #         print("Draw")
+    #         return True
+    #     else:
+    #         return False
+
+    def empty_fields(self, state):
+        fields = []
         for i in range(3):
             for j in range(3):
                 if state[i][j] == " ":
-                    self.empty_fields.append([i, j])
-        # check for draw
-        if len(self.empty_fields) == 0:
-            print("Draw")
-            return True
-        else:
-            return False
+                    fields.append([i, j])
+
+        return fields
 
 
 def main():
